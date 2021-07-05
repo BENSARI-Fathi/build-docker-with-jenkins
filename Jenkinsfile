@@ -3,6 +3,7 @@ pipeline {
     registry = "fathi1996/simple-python-app"
     registryCredential = 'fathi-docker-hub'
     dockerImage = ''
+    dockerImageLastest = ''
   }
   agent any
   stages {
@@ -15,6 +16,7 @@ pipeline {
       steps{
         script {
           dockerImage = docker.build registry + ":$BUILD_NUMBER"
+          dockerImageLastest = docker.build registry + ":latest"
         }
       }
     }
@@ -23,6 +25,7 @@ pipeline {
         script {
           docker.withRegistry( '', registryCredential ) {
             dockerImage.push()
+            dockerImageLastest.push()
           }
         }
       }
@@ -30,6 +33,7 @@ pipeline {
     stage('Remove Unused docker image') {
       steps{
         sh "docker rmi $registry:$BUILD_NUMBER"
+        sh "docker rmi $registry:latest"
       }
     }
   }
