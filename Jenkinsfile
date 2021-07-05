@@ -1,18 +1,35 @@
 pipeline {
+  environment {
+    registry = "fathi1996/simple-python-app"
+    registryCredential = 'fathi-docker-hub'
+    dockerImage = ''
+  }
   agent any
   stages {
-    stage("build") {
+    stage('Cloning Git') {
       steps {
-        sh """
-          docker build -t hello_there .
-        """
+        checkout scm
       }
     }
-    stage("run") {
-      steps {
-        sh """
-          docker run --rm hello_there
-        """
+    stage('Building image') {
+      steps{
+        script {
+          dockerImage = docker.build registry + ":$BUILD_NUMBER"
+        }
+      }
+    }
+    stage('Deploy Image') {
+      steps{
+        script {
+          docker.withRegistry( '', registryCredential ) {
+            dockerImage.push()
+          }
+        }
+      }
+    }
+    stage('Remove Unused docker image') {
+      steps{
+        sh "docker rmi $registry:$BUILD_NUMBER"
       }
     }
   }
